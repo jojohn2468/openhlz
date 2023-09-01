@@ -386,7 +386,7 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
         return IdentifyHLZsFromLatLng()
 
     def helpUrl(self):
-        return ""
+        return "https://github.com/jojohn2468/openhlz/blob/master/README.md"
 
     def shortHelpString(self):
         str = """
@@ -730,7 +730,7 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
         return IdentifyHLZsFromPoint()
 
     def helpUrl(self):
-        return ""
+        return "https://github.com/jojohn2468/openhlz/blob/master/README.md"
 
     def shortHelpString(self):
         str = """
@@ -1056,7 +1056,7 @@ class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
         return IdentifyHLZsFromAoi()
 
     def helpUrl(self):
-        return ""
+        return "https://github.com/jojohn2468/openhlz/blob/master/README.md"
 
     def shortHelpString(self):
         str = """
