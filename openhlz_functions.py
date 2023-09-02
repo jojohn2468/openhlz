@@ -144,51 +144,75 @@ def mosaicAndClipRasters(output_dem_filenames, output_lulc_filenames, aoi_layer,
     """
     Function to mosaic and clip LULC and DEM rasters based on input AOI
     """
+    # Clip/mosaic dem data
+    if len(output_dem_filenames) == 1:
+        feedback.setProgressText('Clipping DEM Data')
+        input_dem = output_dem_filenames[0]
+        processing.run("gdal:cliprasterbymasklayer", {'INPUT': input_dem, 'MASK': aoi_layer,
+                                                      'SOURCE_CRS': None, 'TARGET_CRS': aoi_layer.crs().authid(),
+                                                      'TARGET_EXTENT': None,
+                                                      'NODATA': None, 'ALPHA_BAND': False,
+                                                      'CROP_TO_CUTLINE': True, 'KEEP_RESOLUTION': False,
+                                                      'SET_RESOLUTION': False, 'X_RESOLUTION': None,
+                                                      'Y_RESOLUTION': None, 'MULTITHREADING': False,
+                                                      'OPTIONS': '', 'DATA_TYPE': 6, 'EXTRA': '',
+                                                      'OUTPUT': scratch_folder + '/projected_dem.tif'})
+    else:
+        feedback.setProgressText('Clipping DEM Data')
+        clipped_rasters = []
+        for i in range(len(output_dem_filenames)):
+            temp_name = scratch_folder + '/clipped_dem_' + str(i) + '.tif'
+            clipped_rasters.append(temp_name)
+            processing.run("gdal:cliprasterbymasklayer",
+                           {'INPUT': output_dem_filenames[i], 'MASK': aoi_layer,
+                            'SOURCE_CRS': None, 'TARGET_CRS': aoi_layer.crs().authid(),
+                            'TARGET_EXTENT': None,
+                            'NODATA': None, 'ALPHA_BAND': False,
+                            'CROP_TO_CUTLINE': True, 'KEEP_RESOLUTION': False,
+                            'SET_RESOLUTION': False, 'X_RESOLUTION': None,
+                            'Y_RESOLUTION': None, 'MULTITHREADING': False,
+                            'OPTIONS': '', 'DATA_TYPE': 6, 'EXTRA': '',
+                            'OUTPUT': temp_name})
+        feedback.setProgressText('Mosaicing DEM Data')
+        processing.run("gdal:merge", {'INPUT': clipped_rasters,
+                                      'PCT': False, 'SEPARATE': False, 'NODATA_INPUT': None, 'NODATA_OUTPUT': None,
+                                      'OPTIONS': '', 'EXTRA': '', 'DATA_TYPE': 5,
+                                      'OUTPUT': scratch_folder + '/projected_dem.tif'})
 
-    # Mosaic dem data
-    feedback.setProgressText('Mosaicing DEM Data')
-    output_dem_filename = scratch_folder + '/dem_mosaic.tif'
-    mosaic_parameters = ['', '-o', output_dem_filename]
-    for i in range(len(output_dem_filenames)):
-        mosaic_parameters.append(output_dem_filenames[i])
-    processing.run("gdal:merge", {'INPUT': output_dem_filenames,
-                                  'PCT': False, 'SEPARATE': False, 'NODATA_INPUT': None, 'NODATA_OUTPUT': None,
-                                  'OPTIONS': '', 'EXTRA': '', 'DATA_TYPE': 5,
-                                  'OUTPUT': scratch_folder + '/dem_mosaic.tif'})
-
-    # Mosaic lulc data
-    feedback.setProgressText('Mosaicing LULC Data')
-    output_lulc_filename = scratch_folder + '/lulc_mosaic.tif'
-    mosaic_parameters = ['', '-o', output_lulc_filename]
-    for i in range(len(output_lulc_filenames)):
-        mosaic_parameters.append(output_lulc_filenames[i])
-    processing.run("gdal:merge", {'INPUT': output_lulc_filenames,
-                                  'PCT': False, 'SEPARATE': False, 'NODATA_INPUT': None, 'NODATA_OUTPUT': None,
-                                  'OPTIONS': '', 'EXTRA': '', 'DATA_TYPE': 0,
-                                  'OUTPUT': scratch_folder + '/lulc_mosaic.tif'})
-
-    # Clip and reproject dem and lulc layers
-    feedback.setProgressText('Clipping DEM Data')
-    processing.run("gdal:cliprasterbymasklayer", {'INPUT': scratch_folder + '/dem_mosaic.tif', 'MASK': aoi_layer,
-                                                  'SOURCE_CRS': None, 'TARGET_CRS': aoi_layer.crs().authid(),
-                                                  'TARGET_EXTENT': None,
-                                                  'NODATA': None, 'ALPHA_BAND': False,
-                                                  'CROP_TO_CUTLINE': True, 'KEEP_RESOLUTION': False,
-                                                  'SET_RESOLUTION': False, 'X_RESOLUTION': None,
-                                                  'Y_RESOLUTION': None, 'MULTITHREADING': False,
-                                                  'OPTIONS': '', 'DATA_TYPE': 6, 'EXTRA': '',
-                                                  'OUTPUT': scratch_folder + '/projected_dem.tif'})
-
-    feedback.setProgressText('Clipping LULC Data')
-    processing.run("gdal:cliprasterbymasklayer", {'INPUT': scratch_folder + '/lulc_mosaic.tif', 'MASK': aoi_layer,
-                                                  'SOURCE_CRS': None, 'TARGET_CRS': aoi_layer.crs().authid(),
-                                                  'TARGET_EXTENT': None,
-                                                  'NODATA': None, 'ALPHA_BAND': False,
-                                                  'CROP_TO_CUTLINE': True, 'KEEP_RESOLUTION': False,
-                                                  'SET_RESOLUTION': False, 'X_RESOLUTION': None,
-                                                  'Y_RESOLUTION': None, 'MULTITHREADING': False,
-                                                  'OPTIONS': '', 'DATA_TYPE': 0, 'EXTRA': '',
-                                                  'OUTPUT': scratch_folder + '/projected_lulc.tif'})
+    # Clip/mosaic lulc data
+    if len(output_lulc_filenames) == 1:
+        feedback.setProgressText('Clipping LULC Data')
+        input_lulc = output_lulc_filenames[0]
+        processing.run("gdal:cliprasterbymasklayer", {'INPUT': input_lulc, 'MASK': aoi_layer,
+                                                      'SOURCE_CRS': None, 'TARGET_CRS': aoi_layer.crs().authid(),
+                                                      'TARGET_EXTENT': None,
+                                                      'NODATA': None, 'ALPHA_BAND': False,
+                                                      'CROP_TO_CUTLINE': True, 'KEEP_RESOLUTION': False,
+                                                      'SET_RESOLUTION': False, 'X_RESOLUTION': None,
+                                                      'Y_RESOLUTION': None, 'MULTITHREADING': False,
+                                                      'OPTIONS': '', 'DATA_TYPE': 0, 'EXTRA': '',
+                                                      'OUTPUT': scratch_folder + '/projected_lulc.tif'})
+    else:
+        feedback.setProgressText('Clipping LULC Data')
+        clipped_rasters = []
+        for i in range(len(output_lulc_filenames)):
+            temp_name = scratch_folder + '/clipped_lulc_' + str(i) + '.tif'
+            clipped_rasters.append(temp_name)
+            processing.run("gdal:cliprasterbymasklayer",
+                           {'INPUT': output_lulc_filenames[i], 'MASK': aoi_layer,
+                            'SOURCE_CRS': None, 'TARGET_CRS': aoi_layer.crs().authid(),
+                            'TARGET_EXTENT': None,
+                            'NODATA': None, 'ALPHA_BAND': False,
+                            'CROP_TO_CUTLINE': True, 'KEEP_RESOLUTION': False,
+                            'SET_RESOLUTION': False, 'X_RESOLUTION': None,
+                            'Y_RESOLUTION': None, 'MULTITHREADING': False,
+                            'OPTIONS': '', 'DATA_TYPE': 0, 'EXTRA': '',
+                            'OUTPUT': temp_name})
+        feedback.setProgressText('Mosaicing LULC Data')
+        processing.run("gdal:merge", {'INPUT': clipped_rasters,
+                                      'PCT': False, 'SEPARATE': False, 'NODATA_INPUT': None, 'NODATA_OUTPUT': None,
+                                      'OPTIONS': '', 'EXTRA': '', 'DATA_TYPE': 0,
+                                      'OUTPUT': scratch_folder + '/projected_lulc.tif'})
 
 
 def generateHlsRaster(output, projected_dem, slope_caution, slope_limit, model_coordinate_system,
