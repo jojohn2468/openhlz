@@ -216,6 +216,8 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
 
         self.project_coordinate_system = self.instance.crs()
         self.project_coordinate_system_name = self.instance.crs().authid()
+        self.model_coordinate_system_name = 'epsg:3857'
+        self.model_coordinate_system = QgsCoordinateReferenceSystem(self.model_coordinate_system_name)
 
         self.hls_style_path = 'styles/hls_raster_style.qml'
         self.hlz_stle_path = 'styles/hlz_points_style.qml'
@@ -244,7 +246,7 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
             'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
 
         poi_projected_layer = processing.run("native:reprojectlayer", {'INPUT': poi_layer,
-                                                                       'TARGET_CRS': self.project_coordinate_system,
+                                                                       'TARGET_CRS': self.model_coordinate_system,
                                                                        'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
 
         # Generate AOI
@@ -263,7 +265,7 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
 
         # Get JSON files
         json_1m, json_10m = getJson(self.aoi_layer, self.scratch_folder,
-                                    self.project_coordinate_system_name)
+                                    self.model_coordinate_system_name)
 
         # Variable for output DEM filenames
         self.dem_return = []
@@ -287,7 +289,7 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
                     # Stop the algorithm if cancel button has been clicked
                     if feedback.isCanceled():
                         break
-                    feedback.setProgressText('Downloading DEM Data ' + str(i+1) + '/' + str(json_1m['total']))
+                    feedback.setProgressText('Downloading DEM Data ' + str(i+1) + '/' + str(json_10m['total']))
                     downloaded_tiles.append([min_x, max_y])
                     temp_return = downloadDem(i, json_10m, self.scratch_folder, True)
                     self.dem_return.append(temp_return)
@@ -343,7 +345,7 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
 
         projected_dem = self.scratch_folder + '/projected_dem.tif'
         hls_raster = generateHlsRaster(self.output_hls_raster, projected_dem, self.slope_caution, self.slope_limit,
-                                       self.project_coordinate_system, self.hls_style_path, self.instance,
+                                       self.model_coordinate_system, self.hls_style_path, self.instance,
                                        self.scratch_folder)
 
         """
@@ -357,7 +359,7 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
             return
 
         # Identify HLZ points
-        hlz_points = identifyHlzs(self.output_hlz_points, hls_raster, self.tdp_diameter, self.project_coordinate_system,
+        hlz_points = identifyHlzs(self.output_hlz_points, hls_raster, self.tdp_diameter, self.model_coordinate_system,
                                   self.hlz_stle_path, self.instance, self.scratch_folder)
 
         return {self.OUTPUTHLZPOINTS: hlz_points, self.OUTPUTHLSRASTER: hls_raster}
@@ -576,6 +578,8 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
 
         self.project_coordinate_system = self.instance.crs()
         self.project_coordinate_system_name = self.instance.crs().authid()
+        self.model_coordinate_system_name = 'epsg:3857'
+        self.model_coordinate_system = QgsCoordinateReferenceSystem(self.model_coordinate_system_name)
 
         self.hls_style_path = 'styles/hls_raster_style.qml'
         self.hlz_stle_path = 'styles/hlz_points_style.qml'
@@ -589,9 +593,10 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
 
         # Create AOI
         poi_projected_layer = processing.run("native:reprojectlayer", {'INPUT': self.input_point,
-                                                                       'TARGET_CRS': self.project_coordinate_system,
+                                                                       'TARGET_CRS': self.model_coordinate_system,
                                                                        'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
 
+        # Generate AOI
         self.aoi_layer = processing.run("native:buffer", {'INPUT': poi_projected_layer, 'DISTANCE': self.search_radius,
                                                           'SEGMENTS': 5, 'END_CAP_STYLE': 2, 'JOIN_STYLE': 1,
                                                           'MITER_LIMIT': 2, 'DISSOLVE': False,
@@ -607,7 +612,7 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
 
         # Get JSON files
         json_1m, json_10m = getJson(self.aoi_layer, self.scratch_folder,
-                                    self.project_coordinate_system_name)
+                                    self.model_coordinate_system_name)
 
         # Variable for output DEM filenames
         self.dem_return = []
@@ -631,7 +636,7 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
                     # Stop the algorithm if cancel button has been clicked
                     if feedback.isCanceled():
                         break
-                    feedback.setProgressText('Downloading DEM Data ' + str(i+1) + '/' + str(json_1m['total']))
+                    feedback.setProgressText('Downloading DEM Data ' + str(i+1) + '/' + str(json_10m['total']))
                     downloaded_tiles.append([min_x, max_y])
                     temp_return = downloadDem(i, json_10m, self.scratch_folder, True)
                     self.dem_return.append(temp_return)
@@ -687,7 +692,7 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
 
         projected_dem = self.scratch_folder + '/projected_dem.tif'
         hls_raster = generateHlsRaster(self.output_hls_raster, projected_dem, self.slope_caution, self.slope_limit,
-                                       self.project_coordinate_system, self.hls_style_path, self.instance,
+                                       self.model_coordinate_system, self.hls_style_path, self.instance,
                                        self.scratch_folder)
 
         """
@@ -701,7 +706,7 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
             return
 
         # Identify HLZ points
-        hlz_points = identifyHlzs(self.output_hlz_points, hls_raster, self.tdp_diameter, self.project_coordinate_system,
+        hlz_points = identifyHlzs(self.output_hlz_points, hls_raster, self.tdp_diameter, self.model_coordinate_system,
                                   self.hlz_stle_path, self.instance, self.scratch_folder)
 
         return {self.OUTPUTHLZPOINTS: hlz_points, self.OUTPUTHLSRASTER: hls_raster}
@@ -907,6 +912,8 @@ class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
 
         self.project_coordinate_system = self.instance.crs()
         self.project_coordinate_system_name = self.instance.crs().authid()
+        self.model_coordinate_system_name = 'epsg:3857'
+        self.model_coordinate_system = QgsCoordinateReferenceSystem(self.model_coordinate_system_name)
 
         self.hls_style_path = 'styles/hls_raster_style.qml'
         self.hlz_stle_path = 'styles/hlz_points_style.qml'
@@ -920,7 +927,7 @@ class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
 
         # Project AOI
         self.aoi_layer = processing.run("native:reprojectlayer", {'INPUT': self.input_aoi,
-                                                                  'TARGET_CRS': self.project_coordinate_system,
+                                                                  'TARGET_CRS': self.model_coordinate_system,
                                                                   'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
 
         """
@@ -933,7 +940,7 @@ class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
 
         # Get JSON files
         json_1m, json_10m = getJson(self.aoi_layer, self.scratch_folder,
-                                    self.project_coordinate_system_name)
+                                    self.model_coordinate_system_name)
 
         # Variable for output DEM filenames
         self.dem_return = []
@@ -957,7 +964,7 @@ class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
                     # Stop the algorithm if cancel button has been clicked
                     if feedback.isCanceled():
                         break
-                    feedback.setProgressText('Downloading DEM Data ' + str(i+1) + '/' + str(json_1m['total']))
+                    feedback.setProgressText('Downloading DEM Data ' + str(i+1) + '/' + str(json_10m['total']))
                     downloaded_tiles.append([min_x, max_y])
                     temp_return = downloadDem(i, json_10m, self.scratch_folder, True)
                     self.dem_return.append(temp_return)
@@ -1013,7 +1020,7 @@ class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
 
         projected_dem = self.scratch_folder + '/projected_dem.tif'
         hls_raster = generateHlsRaster(self.output_hls_raster, projected_dem, self.slope_caution, self.slope_limit,
-                                       self.project_coordinate_system, self.hls_style_path, self.instance,
+                                       self.model_coordinate_system, self.hls_style_path, self.instance,
                                        self.scratch_folder)
 
         """
@@ -1027,7 +1034,7 @@ class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
             return
 
         # Identify HLZ points
-        hlz_points = identifyHlzs(self.output_hlz_points, hls_raster, self.tdp_diameter, self.project_coordinate_system,
+        hlz_points = identifyHlzs(self.output_hlz_points, hls_raster, self.tdp_diameter, self.model_coordinate_system,
                                   self.hlz_stle_path, self.instance, self.scratch_folder)
 
         return {self.OUTPUTHLZPOINTS: hlz_points, self.OUTPUTHLSRASTER: hls_raster}

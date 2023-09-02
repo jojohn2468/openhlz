@@ -191,7 +191,7 @@ def mosaicAndClipRasters(output_dem_filenames, output_lulc_filenames, aoi_layer,
                                                   'OUTPUT': scratch_folder + '/projected_lulc.tif'})
 
 
-def generateHlsRaster(output, projected_dem, slope_caution, slope_limit, project_coordinate_system,
+def generateHlsRaster(output, projected_dem, slope_caution, slope_limit, model_coordinate_system,
                       style_path, instance, scratch_folder):
     """
     Function to generate HLS raster based on slope and LULC constraints (see README.md on GitHub for more info on
@@ -205,16 +205,16 @@ def generateHlsRaster(output, projected_dem, slope_caution, slope_limit, project
     # Reclassify slope and LULC rasters
     processing.run("qgis:rastercalculator", {'EXPRESSION': '"slope_raster@1" < ' + str(slope_caution),
                                              'LAYERS': [scratch_folder + '/slope_raster.tif'],
-                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': project_coordinate_system,
+                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': model_coordinate_system,
                                              'OUTPUT': scratch_folder + '/slope_caution.tif'})
     processing.run("qgis:rastercalculator", {'EXPRESSION': '"slope_raster@1" < ' + str(slope_limit),
                                              'LAYERS': [scratch_folder + '/slope_raster.tif'],
-                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': project_coordinate_system,
+                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': model_coordinate_system,
                                              'OUTPUT': scratch_folder + '/slope_limit.tif'})
     processing.run("qgis:rastercalculator", {'EXPRESSION': '"slope_limit@1" + "slope_caution@1"',
                                              'LAYERS': [scratch_folder + '/slope_limit.tif',
                                                         scratch_folder + '/slope_caution.tif'],
-                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': project_coordinate_system,
+                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': model_coordinate_system,
                                              'OUTPUT': scratch_folder + '/slope_reclass.tif'})
     os.remove(scratch_folder + '/slope_raster.tif')
     os.remove(scratch_folder + '/slope_limit.tif')
@@ -222,7 +222,7 @@ def generateHlsRaster(output, projected_dem, slope_caution, slope_limit, project
 
     processing.run("qgis:rastercalculator", {'EXPRESSION': '("projected_lulc@1" = 5) or ("projected_lulc@1" = 11)',
                                              'LAYERS': [scratch_folder + '/projected_lulc.tif'],
-                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': project_coordinate_system,
+                                             'CELLSIZE': 0, 'EXTENT': None, 'CRS': model_coordinate_system,
                                              'OUTPUT': scratch_folder + '/lulc_reclass.tif'})
     os.remove(scratch_folder + '/projected_lulc.tif')
 
@@ -231,7 +231,7 @@ def generateHlsRaster(output, projected_dem, slope_caution, slope_limit, project
                                                           'LAYERS': [scratch_folder + '/lulc_reclass.tif',
                                                                      scratch_folder + '/slope_reclass.tif'],
                                                           'CELLSIZE': 0, 'EXTENT': None,
-                                                          'CRS': project_coordinate_system,
+                                                          'CRS': model_coordinate_system,
                                                           'OUTPUT': output})['OUTPUT']
     os.remove(scratch_folder + '/lulc_reclass.tif')
     os.remove(scratch_folder + '/slope_reclass.tif')
@@ -247,7 +247,8 @@ def generateHlsRaster(output, projected_dem, slope_caution, slope_limit, project
     return hls_raster
 
 
-def identifyHlzs(output, hls_raster, tdp_diameter, project_coordinate_system, style_path, instance, scratch_folder):
+def identifyHlzs(output, hls_raster, tdp_diameter, model_coordinate_system, style_path,
+                 instance, scratch_folder):
     """
     Function to identify possible HLZs based on criteria and HLS raster
     """
@@ -257,7 +258,7 @@ def identifyHlzs(output, hls_raster, tdp_diameter, project_coordinate_system, st
                                        'OUTPUT': scratch_folder + '/pixel_polygons.shp'})
 
     processing.run("native:reprojectlayer", {'INPUT': scratch_folder + '/pixel_polygons.shp',
-                                             'TARGET_CRS': project_coordinate_system,
+                                             'TARGET_CRS': model_coordinate_system,
                                              'OPERATION': '+proj=noop',
                                              'OUTPUT': scratch_folder + '/hls_pixels_polygons_projected.shp'})
 
@@ -280,8 +281,13 @@ def identifyHlzs(output, hls_raster, tdp_diameter, project_coordinate_system, st
                             scratch_folder + '/large_enough_areas.shp')
 
     # Calculate centroids
-    output_hlzs = processing.run("native:centroids", {'INPUT': scratch_folder + '/large_enough_areas.shp',
-                                                      'ALL_PARTS': True, 'OUTPUT': output})['OUTPUT']
+    initial_hlzs = processing.run("native:centroids", {'INPUT': scratch_folder + '/large_enough_areas.shp',
+                                                       'ALL_PARTS': True, 'OUTPUT': 'TEMPORARY_OUTPUT'})['OUTPUT']
+
+    output_hlzs = processing.run("native:reprojectlayer", {'INPUT': initial_hlzs,
+                                                           'TARGET_CRS': model_coordinate_system,
+                                                           'OPERATION': '+proj=noop',
+                                                           'OUTPUT': output})['OUTPUT']
     # Add raster layer to map
     hlz_layer = qgis.core.QgsVectorLayer(output_hlzs, 'Possible HLZs')
     instance.addMapLayer(hlz_layer)
