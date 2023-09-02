@@ -46,16 +46,7 @@ from .openhlz_functions import getJson, downloadDem, downloadLULC, mosaicAndClip
 
 class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Class to identify possible HLZs from lat/lng
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -423,16 +414,7 @@ class IdentifyHLZsFromLatLng(QgsProcessingAlgorithm):
 
 class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Class to identify possible HLZs from a point
     """
 
     # Constants used to refer to parameters and outputs. They will be
@@ -770,16 +752,7 @@ class IdentifyHLZsFromPoint(QgsProcessingAlgorithm):
 
 class IdentifyHLZsFromAoi(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Class to identify possible HLZs from aoi
     """
 
     # Constants used to refer to parameters and outputs. They will be

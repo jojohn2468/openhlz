@@ -21,8 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-import qgis.core
+
 # Import statements
+import qgis.core
 from pyproj import Proj, transform
 import json
 from qgis import processing
